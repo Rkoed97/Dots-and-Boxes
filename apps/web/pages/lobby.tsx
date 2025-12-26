@@ -13,26 +13,47 @@ export default function LobbyPage() {
 
   function clamp(v: number) { return Math.max(11, Math.min(19, Math.floor(v || 11))); }
 
+  function waitForSocketConnect(sock: ReturnType<typeof getSocket>, timeoutMs = 4000) {
+    return new Promise<void>((resolve, reject) => {
+      if (sock.connected) return resolve();
+      let done = false;
+      const onConnect = () => { if (done) return; done = true; cleanup(); resolve(); };
+      const onError = (_err: any) => { if (done) return; done = true; cleanup(); reject(new Error('Unable to connect to realtime server.')); };
+      const timer = setTimeout(() => { if (done) return; done = true; cleanup(); reject(new Error('Timeout connecting to realtime server.')); }, timeoutMs);
+      function cleanup() { clearTimeout(timer); sock.off('connect', onConnect); sock.off('connect_error', onError); }
+      sock.on('connect', onConnect);
+      sock.on('connect_error', onError);
+      try { sock.connect(); } catch {}
+    });
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
       const sock = getSocket();
+      await waitForSocketConnect(sock, 4000);
       const nn = clamp(n);
       const mm = clamp(m);
+      // Wrap emit with an ack timeout to avoid hanging UI
       await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const to = setTimeout(() => {
+          if (settled) return; settled = true; reject(new Error('Realtime request timed out. Please try again.'));
+        }, 8000);
         try {
           sock.emit('lobby:createMatch', { n: nn, m: mm }, (resp?: { matchId: string }) => {
+            if (settled) return; settled = true; clearTimeout(to);
             if (resp?.matchId) {
               router.push(`/game/${resp.matchId}`);
               resolve();
             } else {
-              reject(new Error('No matchId returned'));
+              reject(new Error('Server did not return a match id.'));
             }
           });
         } catch (err) {
-          reject(err);
+          if (settled) return; settled = true; clearTimeout(to); reject(err as any);
         }
       });
     } catch (e: any) {
