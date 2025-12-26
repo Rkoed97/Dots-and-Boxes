@@ -30,6 +30,8 @@ ENV NODE_ENV=production
 # Copy standalone server and static assets
 COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
+# Ensure public assets are available at runtime
+COPY --from=build /app/apps/web/public ./apps/web/public
 # Next server listens on 3000 by default
 ENV PORT=3000
 EXPOSE 3000
