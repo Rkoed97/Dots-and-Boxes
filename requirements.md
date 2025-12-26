@@ -18,8 +18,8 @@ with user accounts, per-user theme/settings, and live gameplay.
 
 ### Gameplay
 - Board defined by N×M dots
-  - N: 11–19
-  - M: 11–19
+  - N: 3–19
+  - M: 3–19
 - Players take turns drawing one edge between adjacent dots
 - Completing a 1×1 box:
   - Claims the box for the player (X or O)

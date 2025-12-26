@@ -65,7 +65,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
         const n = payload?.n;
         const m = payload?.m;
-        if (!Number.isInteger(n) || !Number.isInteger(m) || n < 11 || n > 19 || m < 11 || m > 19) {
+        if (!Number.isInteger(n) || !Number.isInteger(m) || n < 3 || n > 19 || m < 3 || m > 19) {
             return { error: 'INVALID_PAYLOAD' };
         }
 

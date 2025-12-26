@@ -40,7 +40,7 @@ export class MatchService {
   }
 
   async createMatch(userId: string, n: number, m: number): Promise<{ matchId: string }> {
-    if (!Number.isInteger(n) || !Number.isInteger(m) || n < 11 || n > 19 || m < 11 || m > 19) {
+    if (!Number.isInteger(n) || !Number.isInteger(m) || n < 3 || n > 19 || m < 3 || m > 19) {
       throw new Error('INVALID_DIMENSIONS');
     }
     const match = await this.prisma.match.create({

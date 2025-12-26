@@ -14,7 +14,7 @@ export default function LobbyPage() {
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  function clamp(v: number) { return Math.max(11, Math.min(19, Math.floor(v || 11))); }
+  function clamp(v: number) { return Math.max(3, Math.min(19, Math.floor(v || 11))); }
 
   function waitForSocketConnect(sock: ReturnType<typeof getSocket>, timeoutMs = 4000) {
     return new Promise<void>((resolve, reject) => {
@@ -112,11 +112,11 @@ export default function LobbyPage() {
         <form onSubmit={onCreate}>
           <div className="form-row">
             <label>Rows (N)</label>
-            <input type="number" min={11} max={19} value={n} onChange={(e) => setN(Number(e.target.value))} />
+            <input type="number" min={3} max={19} value={n} onChange={(e) => setN(Number(e.target.value))} />
           </div>
           <div className="form-row">
             <label>Cols (M)</label>
-            <input type="number" min={11} max={19} value={m} onChange={(e) => setM(Number(e.target.value))} />
+            <input type="number" min={3} max={19} value={m} onChange={(e) => setM(Number(e.target.value))} />
           </div>
           {error && <p style={{ color: 'crimson' }}>{error}</p>}
           <button disabled={loading} style={{ padding: '8px 12px', border: '1px solid var(--muted)', borderRadius: 6 }}>
