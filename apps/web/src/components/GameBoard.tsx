@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Edge, GameStateSnapshot } from '@shared/core';
 
 export interface GameBoardProps {
@@ -8,9 +8,9 @@ export interface GameBoardProps {
   onEdgeClick?: (edge: Edge) => void;
 }
 
-// Simple responsive SVG board
+// Responsive SVG board with subtle organic styling
 export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }: GameBoardProps) {
-  const { n, m, edges, boxes, players } = snapshot;
+  const { n, m, edges, boxes } = snapshot;
 
   const s = 40; // spacing between dots
   const margin = 20;
@@ -20,26 +20,35 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
   const isMyTurn = snapshot.turnPlayerId === myUserId && snapshot.status !== 'finished';
   const canInteract = isMyTurn && !disabled;
 
-  const dotRadius = 4;
-  const lineWidth = 4;
-  const hitThickness = 18; // for clickable rects
+  const dotRadius = Math.max(3, Math.min(5, Math.round(s * 0.09)));
+  const lineWidth = Math.max(4, Math.min(6, Math.round(s * 0.12)));
+  const hitThickness = 24; // bigger hit areas for touch devices
+
+  const [hover, setHover] = useState<Edge | null>(null);
 
   function dotX(c: number) { return margin + c * s; }
   function dotY(r: number) { return margin + r * s; }
 
+  const isSet = (e: Edge) => e.o === 'H' ? !!edges.h[e.row]?.[e.col] : !!edges.v[e.row]?.[e.col];
+
   function handleEdgeClick(edge: Edge) {
     if (!canInteract) return;
-    // avoid clicking already set edges
-    if (edge.o === 'H') {
-      if (edges.h[edge.row]?.[edge.col]) return;
-    } else {
-      if (edges.v[edge.row]?.[edge.col]) return;
-    }
+    if (isSet(edge)) return; // avoid clicking already set edges
     onEdgeClick?.(edge);
   }
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="edgeGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="0.7" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
       {/* Placed horizontal edges */}
       {edges.h.map((row, r) => row.map((set, c) => {
         if (!set) return null;
@@ -47,7 +56,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
         const y = dotY(r);
         const x2 = dotX(c + 1);
         return (
-          <line key={`h-${r}-${c}`} x1={x1} y1={y} x2={x2} y2={y} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" />
+          <line key={`h-${r}-${c}`} x1={x1} y1={y} x2={x2} y2={y} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" filter="url(#edgeGlow)" />
         );
       }))}
 
@@ -58,9 +67,22 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
         const y1 = dotY(r);
         const y2 = dotY(r + 1);
         return (
-          <line key={`v-${r}-${c}`} x1={x} y1={y1} x2={x} y2={y2} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" />
+          <line key={`v-${r}-${c}`} x1={x} y1={y1} x2={x} y2={y2} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" filter="url(#edgeGlow)" />
         );
       }))}
+
+      {/* Hover preview for available edge */}
+      {canInteract && hover && !isSet(hover) && (
+        hover.o === 'H' ? (
+          <line x1={dotX(hover.col)} y1={dotY(hover.row)} x2={dotX(hover.col + 1)} y2={dotY(hover.row)}
+                stroke={`rgba(var(--accent-rgb), 0.5)`} strokeWidth={lineWidth}
+                strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 10" />
+        ) : (
+          <line x1={dotX(hover.col)} y1={dotY(hover.row)} x2={dotX(hover.col)} y2={dotY(hover.row + 1)}
+                stroke={`rgba(var(--accent-rgb), 0.5)`} strokeWidth={lineWidth}
+                strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 10" />
+        )
+      )}
 
       {/* Boxes owners */}
       {boxes.map((row, r) => row.map((owner, c) => {
@@ -79,7 +101,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
       {/* Clickable hit areas for horizontal edges */}
       {canInteract && edges.h.map((row, r) => row.map((set, c) => {
         if (set) return null;
-        const x = dotX(c) + s / 2 - (s / 2);
+        const x = dotX(c);
         const y = dotY(r) - hitThickness / 2;
         return (
           <rect
@@ -89,6 +111,8 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
             width={s}
             height={hitThickness}
             fill="transparent"
+            onMouseEnter={() => setHover({ o: 'H', row: r, col: c })}
+            onMouseLeave={() => setHover((h) => (h && h.o === 'H' && h.row === r && h.col === c ? null : h))}
             onClick={() => handleEdgeClick({ o: 'H', row: r, col: c })}
             style={{ cursor: 'pointer' }}
           />
@@ -99,7 +123,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
       {canInteract && edges.v.map((col, r) => col.map((set, c) => {
         if (set) return null;
         const x = dotX(c) - hitThickness / 2;
-        const y = dotY(r) + s / 2 - (s / 2);
+        const y = dotY(r);
         return (
           <rect
             key={`vhit-${r}-${c}`}
@@ -108,20 +132,20 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
             width={hitThickness}
             height={s}
             fill="transparent"
+            onMouseEnter={() => setHover({ o: 'V', row: r, col: c })}
+            onMouseLeave={() => setHover((h) => (h && h.o === 'V' && h.row === r && h.col === c ? null : h))}
             onClick={() => handleEdgeClick({ o: 'V', row: r, col: c })}
             style={{ cursor: 'pointer' }}
           />
         );
       }))}
 
-      {/* Dots */}
+      {/* Faded dots */}
       {Array.from({ length: n }).map((_, r) => (
         Array.from({ length: m }).map((__, c) => (
-          <circle key={`d-${r}-${c}`} cx={dotX(c)} cy={dotY(r)} r={dotRadius} fill="var(--fg)" />
+          <circle key={`d-${r}-${c}`} cx={dotX(c)} cy={dotY(r)} r={dotRadius} fill="var(--fg)" opacity={0.28} />
         ))
       ))}
-
-      {/* Overlay text for current turn and scores (outside board area positioning using SVG foreignObject omitted; keep simple below) */}
     </svg>
   );
 }

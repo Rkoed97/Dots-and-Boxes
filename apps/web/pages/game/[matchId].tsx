@@ -74,7 +74,7 @@ export default function GamePage() {
             )}
           </div>
           {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
-          <div style={{ width: '100%', maxWidth: 800, aspectRatio: '1 / 1', border: '1px solid var(--muted)', borderRadius: 8, background: 'var(--panel)' }}>
+          <div style={{ width: '100%', maxWidth: 'min(96vw, 720px)', aspectRatio: '1 / 1', margin: '8px auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', background: 'var(--panel)', boxShadow: 'var(--shadow-sm)' }}>
             <GameBoard snapshot={snap} myUserId={user!.id} disabled={!yourTurn} onEdgeClick={onEdgeClick} />
           </div>
         </>
