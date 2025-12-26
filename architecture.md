@@ -1,7 +1,7 @@
-# Architecture — Docker + Apache Subpath Deployment
+# Architecture — Docker + Root Deployment
 
 Public URL:
-https://deskbuddy.cc/dots-and-boxes/
+https://your-domain.example/
 
 ## Stack
 - Frontend: Next.js + React + TypeScript
@@ -10,19 +10,18 @@ https://deskbuddy.cc/dots-and-boxes/
 - Database: PostgreSQL (Prisma)
 - Optional: Redis (later scaling)
 
-## Key constraint: Subpath hosting
-The application is served under `/dots-and-boxes/`, not `/`.
+## Hosting
+The application is served at the site root '/' on its own domain.
 
 ### Implications
 - Next.js:
-  - basePath: "/dots-and-boxes"
-  - assetPrefix: "/dots-and-boxes/"
+  - No basePath; assets served from '/'
 - API exposed at:
-  - https://deskbuddy.cc/dots-and-boxes/api/
+  - https://your-domain.example/api/
 - WebSocket exposed at:
-  - wss://deskbuddy.cc/dots-and-boxes/ws/
+  - wss://your-domain.example/ws/
 
-Apache reverse-proxies these paths to Docker containers.
+A reverse proxy terminates TLS and forwards traffic to Docker containers.
 
 ## Repository layout (planned)
 - apps/web        → Next.js frontend

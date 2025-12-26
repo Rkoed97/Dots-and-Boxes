@@ -39,7 +39,6 @@ export default function HomePage() {
   return (
     <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <h1>Dots & Boxes</h1>
-      <p>Base path: <code>/dots-and-boxes</code></p>
       <section style={{ marginTop: 16 }}>
         <h2>API connectivity test</h2>
         <p>Fetching: <code>{API_BASE}/health</code></p>

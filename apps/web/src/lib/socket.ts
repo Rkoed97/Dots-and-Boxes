@@ -7,7 +7,7 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 function resolveWsUrlAndPath() {
   // Default: same-origin
   let url: string | undefined = undefined;
-  let path = WS_PATH || '/dots-and-boxes/ws';
+  let path = WS_PATH || '/ws';
 
   if (typeof window !== 'undefined') {
     const isDev = process.env.NODE_ENV !== 'production';
@@ -17,9 +17,8 @@ function resolveWsUrlAndPath() {
       url = 'http://localhost:4000';
       path = '/ws';
     } else {
-      // In production (Docker), API is exposed on 3001 from host perspective; from browser use same host with port 3001
-      const wsOrigin = protocol.replace('http', 'ws');
-      url = `${wsOrigin}//${hostname}:3001`;
+      // In production on separate domain behind reverse proxy, use same-origin WS path
+      url = undefined;
       path = '/ws';
     }
   }

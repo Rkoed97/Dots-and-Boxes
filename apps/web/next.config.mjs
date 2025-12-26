@@ -3,21 +3,19 @@ const isDev = process.env.NODE_ENV !== 'production';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  basePath: '/dots-and-boxes',
-  assetPrefix: '/dots-and-boxes/',
   output: 'standalone',
   async rewrites() {
     if (isDev) {
       return [
         {
-          source: '/dots-and-boxes/api/:path*',
+          source: '/api/:path*',
           destination: 'http://localhost:4000/api/:path*',
         },
       ];
     }
     return [
       {
-        source: '/dots-and-boxes/api/:path*',
+        source: '/api/:path*',
         destination: 'http://api:3001/api/:path*',
       },
     ];

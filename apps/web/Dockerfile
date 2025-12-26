@@ -33,6 +33,6 @@ COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 # Next server listens on 3000 by default
 ENV PORT=3000
 EXPOSE 3000
-# Healthcheck for basePath root
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD node -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/dots-and-boxes').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+# Healthcheck for root
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD node -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 CMD ["node", "apps/web/server.js"]

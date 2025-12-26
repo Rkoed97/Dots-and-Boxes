@@ -79,45 +79,44 @@ docker compose up -d
 Services start on an internal network only (no published ports). Healthchecks ensure:
 - db is ready via pg_isready
 - api healthy when http://api:3001/api/health returns 200
-- web healthy when http://web:3000/dots-and-boxes returns 200
+- web healthy when http://web:3000/ returns 200
 
-3) Reverse proxy (Apache) for a subpath /dots-and-boxes on your domain (e.g., https://deskbuddy.cc/dots-and-boxes):
+3) Reverse proxy (Apache/Nginx) for a separate domain (serve at root '/'):
 
 Enable required modules: proxy, proxy_http, proxy_wstunnel, headers.
 
-Example VirtualHost snippet:
+Example (Apache) VirtualHost snippet:
 ```
-# Serve Next.js UI under /dots-and-boxes
-ProxyPass        /dots-and-boxes           http://127.0.0.1:3000/dots-and-boxes
-ProxyPassReverse /dots-and-boxes           http://127.0.0.1:3000/dots-and-boxes
+# Serve Next.js UI at root
+ProxyPass        /           http://127.0.0.1:3000/
+ProxyPassReverse /           http://127.0.0.1:3000/
 
-# Forward REST API under /dots-and-boxes/api -> Nest at /api
-ProxyPass        /dots-and-boxes/api       http://127.0.0.1:3001/api
-ProxyPassReverse /dots-and-boxes/api       http://127.0.0.1:3001/api
+# Forward REST API under /api -> Nest at /api
+ProxyPass        /api        http://127.0.0.1:3001/api
+ProxyPassReverse /api        http://127.0.0.1:3001/api
 
-# Forward WebSocket gateway under /dots-and-boxes/ws -> Nest at /ws
-ProxyPass        /dots-and-boxes/ws        ws://127.0.0.1:3001/ws
-ProxyPassReverse /dots-and-boxes/ws        ws://127.0.0.1:3001/ws
+# Forward WebSocket gateway under /ws -> Nest at /ws
+ProxyPass        /ws         ws://127.0.0.1:3001/ws
+ProxyPassReverse /ws         ws://127.0.0.1:3001/ws
 
 # Optional: allow WebSocket upgrade
 RewriteEngine On
 RewriteCond %{HTTP:Upgrade} =websocket [NC]
-RewriteRule /dots-and-boxes/ws/(.*) ws://127.0.0.1:3001/ws/$1 [P,L]
+RewriteRule /ws/(.*) ws://127.0.0.1:3001/ws/$1 [P,L]
 ```
 
 4) Environment variables
 - API (apps/api):
   - DATABASE_URL=postgresql://dots:dots_change_me@db:5432/dots
-  - CORS_ORIGIN=https://deskbuddy.cc (or your dev origin)
+  - CORS_ORIGIN=https://your-domain.example (or your dev origin)
   - PORT=3001 (default)
 - Web (apps/web):
-  - NEXT_PUBLIC_BASE_PATH=/dots-and-boxes
-  - NEXT_PUBLIC_API_BASE=/dots-and-boxes/api
-  - NEXT_PUBLIC_WS_PATH=/dots-and-boxes/ws
+  - NEXT_PUBLIC_API_BASE=/api (default)
+  - NEXT_PUBLIC_WS_PATH=/ws (default)
 
 5) Verify
-- API health: https://deskbuddy.cc/dots-and-boxes/api/health
-- API version: https://deskbuddy.cc/dots-and-boxes/api/version (or /api/health/version also available)
-- Web root: https://deskbuddy.cc/dots-and-boxes/
+- API health: https://your-domain.example/api/health
+- API version: https://your-domain.example/api/version
+- Web root: https://your-domain.example/
 
 If you cannot publish ports, rely on the reverse proxy only. The docker-compose healthchecks ensure containers are healthy.
