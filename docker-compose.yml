@@ -19,6 +19,48 @@ services:
     networks:
       - internal
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Keep it private to the host; expose via Apache only if you add auth/IP allowlisting
+    ports:
+      - "127.0.0.1:5050:80"
+
+    environment:
+      # Admin login for pgAdmin UI
+      PGADMIN_DEFAULT_EMAIL: admin@deskbuddy.cc
+      PGADMIN_DEFAULT_PASSWORD: change_me_now_to_a_strong_password
+
+      # Hardened settings
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "True"
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "True"
+      PGADMIN_CONFIG_COOKIE_CSRF_PROTECT: "True"
+      PGADMIN_CONFIG_WTF_CSRF_CHECK_DEFAULT: "True"
+      PGADMIN_CONFIG_SESSION_COOKIE_HTTPONLY: "True"
+
+      # If/when you put pgAdmin behind HTTPS (recommended), set this to True
+      # (leave False if you only access via http://127.0.0.1:5050)
+      PGADMIN_CONFIG_SESSION_COOKIE_SECURE: "False"
+
+      # Optional: reduce info leakage
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "30"
+
+    volumes:
+      # Persistent pgAdmin state
+      - ./docker-data/pgadmin:/var/lib/pgadmin
+
+      # Auto-provisioning: registered servers + password file
+      - ./docker-data/pgadmin-provisioning/servers.json:/pgadmin4/servers.json:ro
+      - ./docker-data/pgadmin-provisioning/pgpass:/pgadmin4/pgpass:ro
+
+    networks:
+      - internal
+
+
   api:
     build:
       context: .
