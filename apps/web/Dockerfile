@@ -8,7 +8,7 @@ RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 # 2) Build stage
 FROM node:20-slim AS build
@@ -16,7 +16,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 COPY . .
+# Copy workspace node_modules from deps (root and per-package for proper .bin resolution)
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 # Build shared and web; Next output is standalone (configured in next.config.mjs)
 RUN pnpm --filter @shared/core build && pnpm --filter web build
 

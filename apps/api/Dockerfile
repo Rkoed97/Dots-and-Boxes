@@ -19,8 +19,11 @@ RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /v
 COPY . .
 # Use the node_modules we installed in deps (pnpm virtual store)
 COPY --from=deps /app/node_modules ./node_modules
-# Generate Prisma Client and build all workspaces (ensures @shared/core builds before api)
-RUN pnpm --filter api prisma:generate && pnpm -r --workspace-concurrency=1 --if-present build
+# Also copy per-package node_modules for correct .bin resolution in workspace scripts
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+# Generate Prisma Client and build only the api (api prebuild builds @shared/core)
+RUN pnpm --filter api prisma:generate && pnpm --filter api build
 
 # 3) Runtime stage: minimal image
 FROM node:20-slim AS runtime
@@ -30,6 +33,11 @@ ENV NODE_ENV=production
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 # Copy only what we need to run
 COPY --from=deps /app/node_modules ./node_modules
+# Also copy per-package node_modules to ensure workspace resolution (e.g., reflect-metadata)
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+# Copy built shared workspace so pnpm workspace link resolves at runtime
+COPY --from=build /app/packages/shared ./packages/shared
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
