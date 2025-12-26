@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { MatchStatus, EdgeOrientation } from '@prisma/client';
+import prismaPkg from '@prisma/client';
+const { MatchStatus, EdgeOrientation } = prismaPkg;
 import type { Edge, GameStateSnapshot } from '@shared/core';
 import { createInitialState, validateMove as engineValidateMove, applyMove as engineApplyMove, type MoveRejectionReason } from '@shared/core';
 

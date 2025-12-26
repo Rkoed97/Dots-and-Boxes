@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, INestApplication } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import prismaPkg from '@prisma/client';
+const { PrismaClient } = prismaPkg;
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -8,8 +9,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   }
 
   async enableShutdownHooks(app: INestApplication) {
-    // Cast to any to avoid overly strict generic constraint on $on()
-    (this as any).$on('beforeExit', async () => {
+    // Prisma 5+ library engine no longer supports $on('beforeExit'); use process.on instead.
+    process.on('beforeExit', async () => {
       await app.close();
     });
   }

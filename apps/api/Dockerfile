@@ -32,10 +32,10 @@ ENV NODE_ENV=production
 # Prisma engines require OpenSSL at runtime too
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 # Copy only what we need to run
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 # Also copy per-package node_modules to ensure workspace resolution (e.g., reflect-metadata)
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build /app/packages/shared/node_modules ./packages/shared/node_modules
 # Copy built shared workspace so pnpm workspace link resolves at runtime
 COPY --from=build /app/packages/shared ./packages/shared
 COPY --from=build /app/apps/api/dist ./apps/api/dist
