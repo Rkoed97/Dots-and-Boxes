@@ -23,7 +23,7 @@ export default function RegisterPage() {
         const msg = await safeMsg(res);
         throw new Error(msg || 'Registration failed');
       }
-      router.push('/dots-and-boxes/login');
+      router.push('/login');
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
@@ -54,7 +54,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <p style={{ marginTop: 12 }}>
-          Already have an account? <a href="/dots-and-boxes/login">Login</a>
+          Already have an account? <a href="/login">Login</a>
         </p>
       </div>
     </main>

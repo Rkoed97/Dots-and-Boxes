@@ -64,8 +64,8 @@ export function useRequireAuth() {
   useEffect(() => {
     if (!loading && !user && !redirected) {
       setRedirected(true);
-      // Next.js will respect basePath; using absolute path is fine too
-      window.location.assign('/dots-and-boxes/login');
+      // Respect Next.js basePath by using root-relative path
+      window.location.assign('/login');
     }
   }, [loading, user, redirected]);
   const ready = !loading && !!user;

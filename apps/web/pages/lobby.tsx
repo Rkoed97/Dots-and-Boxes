@@ -25,7 +25,7 @@ export default function LobbyPage() {
         try {
           sock.emit('lobby:createMatch', { n: nn, m: mm }, (resp?: { matchId: string }) => {
             if (resp?.matchId) {
-              router.push(`/dots-and-boxes/game/${resp.matchId}`);
+              router.push(`/game/${resp.matchId}`);
               resolve();
             } else {
               reject(new Error('No matchId returned'));

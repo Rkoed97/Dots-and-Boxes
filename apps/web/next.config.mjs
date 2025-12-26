@@ -15,7 +15,12 @@ const nextConfig = {
         },
       ];
     }
-    return [];
+    return [
+      {
+        source: '/dots-and-boxes/api/:path*',
+        destination: 'http://api:3001/api/:path*',
+      },
+    ];
   },
 };
 

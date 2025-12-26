@@ -11,10 +11,15 @@ function resolveWsUrlAndPath() {
 
   if (typeof window !== 'undefined') {
     const isDev = process.env.NODE_ENV !== 'production';
-    const { hostname, port } = window.location;
+    const { hostname, protocol } = window.location;
     // In dev, Next runs on 3000 and API on 4000. Our server uses path '/ws'.
-    if (isDev && hostname === 'localhost' && port === '3000') {
+    if (isDev) {
       url = 'http://localhost:4000';
+      path = '/ws';
+    } else {
+      // In production (Docker), API is exposed on 3001 from host perspective; from browser use same host with port 3001
+      const wsOrigin = protocol.replace('http', 'ws');
+      url = `${wsOrigin}//${hostname}:3001`;
       path = '/ws';
     }
   }

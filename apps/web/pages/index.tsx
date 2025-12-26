@@ -53,12 +53,12 @@ export default function HomePage() {
       </section>
       <nav style={{ marginTop: 24 }}>
         <ul>
-          <li><a href="/dots-and-boxes/login">Login</a></li>
-          <li><a href="/dots-and-boxes/register">Register</a></li>
-          <li><a href="/dots-and-boxes/profile">Profile</a></li>
-          <li><a href="/dots-and-boxes/settings">Settings</a></li>
-          <li><a href="/dots-and-boxes/lobby">Lobby</a></li>
-          <li><a href="/dots-and-boxes/game/test-match">Sample Game</a></li>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/settings">Settings</a></li>
+          <li><a href="/lobby">Lobby</a></li>
+          <li><a href="/game/test-match">Sample Game</a></li>
         </ul>
       </nav>
     </main>

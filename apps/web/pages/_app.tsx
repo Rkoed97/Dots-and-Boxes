@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import '@/styles/globals.css';
 import { loadSavedTheme, applyTheme } from '@/lib/theme';
@@ -18,10 +19,10 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <div>
       <header style={{ padding: '12px 16px', borderBottom: '1px solid var(--muted)', background: 'var(--panel)' }}>
         <nav style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <a href="/dots-and-boxes/">Home</a>
-          <a href="/dots-and-boxes/lobby">Lobby</a>
-          <a href="/dots-and-boxes/profile">Profile</a>
-          <a href="/dots-and-boxes/settings">Settings</a>
+          <Link href="/">Home</Link>
+          <Link href="/lobby">Lobby</Link>
+          <Link href="/profile">Profile</Link>
+          <Link href="/settings">Settings</Link>
           <span style={{ marginLeft: 'auto' }} />
           {user ? (
             <>
@@ -29,7 +30,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
               <button
                 onClick={async () => {
                   await logout();
-                  router.push('/dots-and-boxes/login');
+                  router.push('/login');
                 }}
                 style={{ padding: '6px 10px', border: '1px solid var(--muted)', borderRadius: 6 }}
               >
@@ -38,8 +39,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
             </>
           ) : (
             <>
-              <a href="/dots-and-boxes/login">Login</a>
-              <a href="/dots-and-boxes/register">Register</a>
+              <Link href="/login">Login</Link>
+              <Link href="/register">Register</Link>
             </>
           )}
         </nav>

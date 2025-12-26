@@ -25,7 +25,7 @@ export default function LoginPage() {
         throw new Error(msg || 'Login failed');
       }
       await refresh();
-      router.push('/dots-and-boxes/lobby');
+      router.push('/lobby');
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
@@ -52,7 +52,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p style={{ marginTop: 12 }}>
-          No account? <a href="/dots-and-boxes/register">Register</a>
+          No account? <a href="/register">Register</a>
         </p>
       </div>
     </main>
