@@ -1,0 +1,17 @@
+{
+  "name": "dots-and-boxes-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "dev": "pnpm -r --filter ./apps/* --parallel --if-present dev",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.3"
+  }
+}
