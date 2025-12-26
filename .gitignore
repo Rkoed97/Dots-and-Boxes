@@ -53,3 +53,6 @@ prisma/migrations/
 # Logs
 *.log
 logs/
+
+# Local Docker volumes (database persistence)
+docker-data/

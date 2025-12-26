@@ -1,0 +1,47 @@
+# VCS and metadata
+.git
+.gitignore
+.idea/
+.vscode/
+.junie/
+**/.DS_Store
+
+# Logs and caches
+*.log
+**/*.log
+.cache/
+.eslintcache
+
+# Node modules from host (we install inside image)
+node_modules/
+**/node_modules/
+
+# Build outputs (built inside image instead)
+dist/
+build/
+out/
+**/dist/
+**/build/
+.next/
+**/.next/
+.turbo/
+**/.turbo/
+.vercel/
+coverage/
+
+# Env files (use Docker env instead)
+.env
+.env.*
+!**/.env.example
+
+# Prisma local databases (persist outside images, not copied)
+**/prisma/*.db
+**/prisma/*-journal
+
+# Keep Prisma schema and migrations inside images
+!**/prisma/schema.prisma
+!**/prisma/migrations/**
+
+
+# Local Docker volumes (persisted data)
+docker-data/
