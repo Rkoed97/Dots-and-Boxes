@@ -3,10 +3,10 @@
 ## Client → Server
 
 ### lobby:createMatch
-{ n: number, m: number }
+{ n: number, m: number } → ack: { matchId } | { error }
 
 ### lobby:joinMatch
-{ matchId: string }
+{ matchId: string } → ack: { ok: true } | { error }
 
 ### game:move
 {

@@ -56,7 +56,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     async handleCreateMatch(
         @MessageBody() payload: { n: number; m: number },
         @ConnectedSocket() client: Socket,
-    ): Promise<{ matchId?: string; error?: string }> {
+    ): Promise<{ matchId: string } | { error: string }> {
         const userId = (client.data as any).userId as string | undefined;
 
         if (!userId) {
@@ -78,15 +78,24 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
   @SubscribeMessage('lobby:joinMatch')
-  async handleJoinMatch(@MessageBody() payload: { matchId: string }, @ConnectedSocket() client: Socket) {
-    const userId = (client.data as any).userId as string;
-    if (!userId || !payload?.matchId) return;
+  async handleJoinMatch(
+    @MessageBody() payload: { matchId: string },
+    @ConnectedSocket() client: Socket
+  ): Promise<{ ok: true } | { error: string }> {
+    const userId = (client.data as any).userId as string | undefined;
+    if (!userId) return { error: 'UNAUTHORIZED' };
+    const matchId = payload?.matchId;
+    if (!matchId || typeof matchId !== 'string' || !matchId.trim()) {
+      return { error: 'INVALID_PAYLOAD' };
+    }
     try {
-      const snap = await this.matches.joinMatch(userId, payload.matchId);
-      await client.join(this.room(payload.matchId));
-      this.server.to(this.room(payload.matchId)).emit('game:state', snap);
-    } catch {
-      // silently ignore
+      const snap = await this.matches.joinMatch(userId, matchId);
+      await client.join(this.room(matchId));
+      this.server.to(this.room(matchId)).emit('game:state', snap);
+      return { ok: true };
+    } catch (e: any) {
+      const msg = e?.message ?? 'JOIN_FAILED';
+      return { error: msg };
     }
   }
 
@@ -111,8 +120,4 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  @SubscribeMessage('ping')
-  handlePing(@MessageBody() _payload: unknown, @ConnectedSocket() client: Socket) {
-    client.emit('pong');
-  }
 }

@@ -32,10 +32,16 @@ describe('shared protocol/types', () => {
   it('ClientToServerEvents signatures', () => {
     type CreateMatch = ClientToServerEvents['lobby:createMatch'];
     expectTypeOf<CreateMatch>().toBeFunction();
-    expectTypeOf<CreateMatch>().parameters.toEqualTypeOf<[{ n: number; m: number }, ((resp: { matchId: string }) => void) | undefined]>();
+    expectTypeOf<CreateMatch>().parameters.toEqualTypeOf<[
+      { n: number; m: number },
+      ((resp: { matchId: string } | { error: string }) => void) | undefined
+    ]>();
 
     type JoinMatch = ClientToServerEvents['lobby:joinMatch'];
-    expectTypeOf<JoinMatch>().parameters.toEqualTypeOf<[{ matchId: string }]>();
+    expectTypeOf<JoinMatch>().parameters.toEqualTypeOf<[
+      { matchId: string },
+      ((resp: { ok: true } | { error: string }) => void) | undefined
+    ]>();
 
     type Move = ClientToServerEvents['game:move'];
     expectTypeOf<Move>().parameters.toEqualTypeOf<[{ matchId: string; edge: Edge; clientSeq: number }]>();

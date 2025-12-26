@@ -33,7 +33,14 @@ export default function GamePage() {
     sock.on('game:ended', onEnded);
 
     // Join (or rejoin) match room; server will emit latest snapshot
-    sock.emit('lobby:joinMatch', { matchId: matchIdStr });
+    // TS note: some environments may lag behind shared types for ack; cast to any for emit here
+    (sock as any).emit('lobby:joinMatch', { matchId: matchIdStr }, (resp?: { ok?: true } | { error?: string }) => {
+      if (!resp) return;
+      if ('error' in resp && resp.error) {
+        setMsg(resp.error === 'MATCH_NOT_FOUND' ? 'Match not found' : resp.error === 'MATCH_FULL' ? 'Match is full' : 'Unable to join match');
+        setTimeout(() => router.push('/lobby'), 1200);
+      }
+    });
 
     return () => {
       sock.off('game:state', onState);

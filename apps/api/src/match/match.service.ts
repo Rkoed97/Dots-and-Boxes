@@ -60,10 +60,25 @@ export class MatchService {
     const match = await this.prisma.match.findUnique({ where: { id: matchId } });
     if (!match) throw new Error('MATCH_NOT_FOUND');
 
-    // If user already is in match, keep as is. Otherwise try to set as O.
-    if (match.playerXId !== userId && match.playerOId !== userId) {
-      if (!match.playerOId) {
-        await this.prisma.match.update({ where: { id: matchId }, data: { playerOId: userId } });
+    // If user already is in match, proceed. Otherwise attempt to claim O slot.
+    const isPlayer = match.playerXId === userId || match.playerOId === userId;
+
+    if (!isPlayer) {
+      // If already full, reject immediately
+      if (match.playerXId && match.playerOId) {
+        throw new Error('MATCH_FULL');
+      }
+      // Attempt to claim O slot atomically (avoid race conditions)
+      const res = await this.prisma.match.updateMany({
+        where: { id: matchId, playerOId: null },
+        data: { playerOId: userId },
+      });
+      if (res.count === 0) {
+        // Someone else took the slot or match changed; re-check
+        const again = await this.prisma.match.findUnique({ where: { id: matchId } });
+        if (!again) throw new Error('MATCH_NOT_FOUND');
+        const nowPlayer = again.playerXId === userId || again.playerOId === userId;
+        if (!nowPlayer) throw new Error('MATCH_FULL');
       }
     }
 
@@ -76,6 +91,8 @@ export class MatchService {
       updated = await this.prisma.match.update({ where: { id: matchId }, data: { status: MatchStatus.active } });
     }
 
+    // Invalidate any cached snapshot to ensure new playerO and status are reflected
+    this.active.delete(updated.id);
     const snapshot = await this.getOrRebuildState(updated.id);
     return snapshot;
   }

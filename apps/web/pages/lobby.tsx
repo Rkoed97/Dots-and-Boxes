@@ -10,6 +10,9 @@ export default function LobbyPage() {
   const [m, setM] = useState(11);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [matchIdInput, setMatchIdInput] = useState('');
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   function clamp(v: number) { return Math.max(11, Math.min(19, Math.floor(v || 11))); }
 
@@ -65,6 +68,42 @@ export default function LobbyPage() {
     }
   }
 
+  async function onJoin(e: FormEvent) {
+    e.preventDefault();
+    setJoinError(null);
+    setJoinLoading(true);
+    try {
+      const id = (matchIdInput || '').trim();
+      if (!id) throw new Error('Please enter a match ID.');
+      const sock = getSocket();
+      await waitForSocketConnect(sock, 4000);
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const to = setTimeout(() => {
+          if (settled) return; settled = true; reject(new Error('Realtime request timed out. Please try again.'));
+        }, 8000);
+        try {
+          (sock as any).emit('lobby:joinMatch', { matchId: id }, (resp?: { ok?: true } | { error?: string }) => {
+            if (settled) return; settled = true; clearTimeout(to);
+            if (resp && 'error' in resp && resp.error) {
+              const friendly = resp.error === 'MATCH_NOT_FOUND' ? 'Match not found' : resp.error === 'MATCH_FULL' ? 'Match is full' : resp.error;
+              reject(new Error(friendly));
+            } else {
+              router.push(`/game/${id}`);
+              resolve();
+            }
+          });
+        } catch (err) {
+          if (settled) return; settled = true; clearTimeout(to); reject(err as any);
+        }
+      });
+    } catch (e: any) {
+      setJoinError(e?.message ?? String(e));
+    } finally {
+      setJoinLoading(false);
+    }
+  }
+
   if (!ready) return null;
   return (
     <main className="container">
@@ -82,6 +121,18 @@ export default function LobbyPage() {
           {error && <p style={{ color: 'crimson' }}>{error}</p>}
           <button disabled={loading} style={{ padding: '8px 12px', border: '1px solid var(--muted)', borderRadius: 6 }}>
             {loading ? 'Creating…' : 'Create Match'}
+          </button>
+        </form>
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <form onSubmit={onJoin}>
+          <div className="form-row">
+            <label>Join by Match ID</label>
+            <input type="text" placeholder="Enter match ID" value={matchIdInput} onChange={(e) => setMatchIdInput(e.target.value)} />
+          </div>
+          {joinError && <p style={{ color: 'crimson' }}>{joinError}</p>}
+          <button disabled={joinLoading} style={{ padding: '8px 12px', border: '1px solid var(--muted)', borderRadius: 6 }}>
+            {joinLoading ? 'Joining…' : 'Join Match'}
           </button>
         </form>
       </div>
