@@ -43,9 +43,11 @@ export default function LobbyPage() {
           if (settled) return; settled = true; reject(new Error('Realtime request timed out. Please try again.'));
         }, 8000);
         try {
-          sock.emit('lobby:createMatch', { n: nn, m: mm }, (resp?: { matchId: string }) => {
+          sock.emit('lobby:createMatch', { n: nn, m: mm }, (resp?: { matchId?: string; error?: string }) => {
             if (settled) return; settled = true; clearTimeout(to);
-            if (resp?.matchId) {
+            if (resp?.error) {
+              reject(new Error(resp.error));
+            } else if (resp?.matchId) {
               router.push(`/game/${resp.matchId}`);
               resolve();
             } else {

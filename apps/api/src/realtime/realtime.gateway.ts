@@ -52,21 +52,30 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return `match:${matchId}`;
   }
 
-  @SubscribeMessage('lobby:createMatch')
-  async handleCreateMatch(@MessageBody() payload: { n: number; m: number; }, @ConnectedSocket() client: Socket) {
-    const userId = (client.data as any).userId as string;
-    if (!userId) return;
-    try {
-      const { matchId } = await this.matches.createMatch(userId, payload?.n as number, payload?.m as number);
-      // Optional ack via arguments[2] isn't typed; clients can pass a cb
-      const maybeAck = (arguments as any)[2];
-      if (typeof maybeAck === 'function') {
-        maybeAck({ matchId });
-      }
-    } catch {
-      // ignore for now; could add error acking if desired
+    @SubscribeMessage('lobby:createMatch')
+    async handleCreateMatch(
+        @MessageBody() payload: { n: number; m: number },
+        @ConnectedSocket() client: Socket,
+    ): Promise<{ matchId?: string; error?: string }> {
+        const userId = (client.data as any).userId as string | undefined;
+
+        if (!userId) {
+            return { error: 'UNAUTHORIZED' };
+        }
+
+        const n = payload?.n;
+        const m = payload?.m;
+        if (!Number.isInteger(n) || !Number.isInteger(m) || n < 11 || n > 19 || m < 11 || m > 19) {
+            return { error: 'INVALID_PAYLOAD' };
+        }
+
+        try {
+            const { matchId } = await this.matches.createMatch(userId, n, m);
+            return { matchId };
+        } catch (e: any) {
+            return { error: e?.message ?? 'CREATE_MATCH_FAILED' };
+        }
     }
-  }
 
   @SubscribeMessage('lobby:joinMatch')
   async handleJoinMatch(@MessageBody() payload: { matchId: string }, @ConnectedSocket() client: Socket) {
