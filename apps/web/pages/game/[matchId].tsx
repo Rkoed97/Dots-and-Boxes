@@ -4,6 +4,8 @@ import { useRequireAuth } from '@/hooks/useAuth';
 import { getSocket } from '@/lib/socket';
 import GameBoard from '@/components/GameBoard';
 import type { Edge, GameStateSnapshot } from '@shared/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCopy } from '@fortawesome/free-solid-svg-icons';
 
 export default function GamePage() {
   const router = useRouter();
@@ -62,7 +64,28 @@ export default function GamePage() {
   return (
     <main className="container">
       <h1>Game</h1>
-      <p>Match ID: <code>{String(matchIdStr ?? '')}</code></p>
+      <p style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        Match ID: <code>{String(matchIdStr ?? '')}</code>
+        <button
+          aria-label="Copy match ID"
+          title="Copy match ID"
+          onClick={async () => {
+            try {
+              if (!matchIdStr) throw new Error('No match ID');
+              await navigator.clipboard.writeText(matchIdStr);
+              setMsg('Copied match ID');
+              setTimeout(() => setMsg(null), 1200);
+            } catch {
+              setMsg('Copy failed');
+              setTimeout(() => setMsg(null), 1500);
+            }
+          }}
+          disabled={!matchIdStr}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid var(--muted)', background: 'var(--panel)', color: 'var(--fg)' }}
+        >
+          <FontAwesomeIcon icon={faCopy} />
+        </button>
+      </p>
       {snap ? (
         <>
           <div style={{ margin: '8px 0' }}>

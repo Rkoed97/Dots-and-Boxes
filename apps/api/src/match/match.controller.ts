@@ -1,12 +1,12 @@
-import { Controller, Get, Delete, Param, UseGuards, Inject, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Delete, Param, UseGuards, Inject, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import { Req } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { isLikelyUuid, isValidMatchId } from '../lib/matchId.js';
 
 // Minimal shape for frontend consumption
 interface GameDto {
   id: string;
+  matchId?: string | null;
   title?: string;
   createdAt?: string;
   status?: string;
@@ -30,10 +30,11 @@ export class MatchController {
         ],
       },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, createdAt: true, status: true, playerXId: true, playerOId: true },
+      select: { id: true, matchId: true, createdAt: true, status: true, playerXId: true, playerOId: true },
     });
     const games: GameDto[] = rows.map((r) => ({
       id: r.id,
+      matchId: (r as any).matchId ?? undefined,
       createdAt: r.createdAt?.toISOString?.() ?? undefined,
       status: String(r.status),
       playerCount: (r.playerXId ? 1 : 0) + (r.playerOId ? 1 : 0),

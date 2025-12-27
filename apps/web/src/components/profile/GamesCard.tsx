@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import { useMyGames } from '@/hooks/useMyGames';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCopy, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 export default function GamesCard() {
   const { games, isLoading, error, refetch, deleteGame, deletingId } = useMyGames();
@@ -14,6 +16,18 @@ export default function GamesCard() {
     const res = await deleteGame(id);
     if (!res.ok) {
       setMsg(res.error || 'Delete failed');
+    }
+  }
+
+  async function onCopy(matchId?: string | null) {
+    try {
+      if (!matchId) throw new Error('No match ID available');
+      await navigator.clipboard.writeText(matchId);
+      setMsg('Copied match ID');
+      setTimeout(() => setMsg(null), 1200);
+    } catch (e: any) {
+      setMsg('Copy failed');
+      setTimeout(() => setMsg(null), 1500);
     }
   }
 
@@ -51,13 +65,27 @@ export default function GamesCard() {
                   {g.createdAt ? ` · Created: ${new Date(g.createdAt).toLocaleString()}` : null}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Link href={`/game/${g.id}`} style={{ padding: '6px 10px', borderRadius: 6, background: 'var(--accent)', color: '#fff', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  aria-label="Copy match ID"
+                  title="Copy match ID"
+                  onClick={() => onCopy(g.matchId)}
+                  disabled={!g.matchId}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid var(--muted)', background: 'var(--panel)', color: 'var(--fg)' }}
+                >
+                  <FontAwesomeIcon icon={faCopy} />
+                </button>
+                <Link href={`/game/${g.matchId ?? g.id}`} style={{ padding: '6px 10px', borderRadius: 6, background: 'var(--accent)', color: '#fff', boxShadow: 'var(--shadow-sm)' }}>
                   Join
                 </Link>
-                <button onClick={() => onDelete(g.id)} disabled={deletingId === g.id} title="Delete game"
-                        style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid crimson', color: 'crimson', background: 'transparent' }}>
-                  {deletingId === g.id ? 'Deleting…' : 'Delete'}
+                <button
+                  aria-label="Delete game"
+                  title="Delete game"
+                  onClick={() => onDelete(g.id)}
+                  disabled={deletingId === g.id}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid crimson', color: 'crimson', background: 'transparent', opacity: deletingId === g.id ? 0.6 : 1 }}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
                 </button>
               </div>
             </li>

@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/api';
 
 export type MyGame = {
   id: string;
+  matchId?: string | null;
   title?: string;
   createdAt?: string;
   status?: string;
