@@ -16,6 +16,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         if (t) applyTheme(t);
     }, []);
 
+    const siteUrl =
+        (process.env.NEXT_PUBLIC_SITE_URL || 'https://dots.deskbuddy.cc').replace(/\/+$/, '');
+
+    const ogImage = `${siteUrl}/og_banner.png`;
+
     return (
         <>
             <Head>
@@ -36,16 +41,17 @@ export default function MyApp({ Component, pageProps }: AppProps) {
                 <link rel="manifest" href="/site.webmanifest" />
                 <meta name="theme-color" content="#6EC6FF" />
 
-                {/* Open Graph (WhatsApp, Discord, Facebook) */}
+                {/* Canonical URL (VERY IMPORTANT) */}
+                <link rel="canonical" href={siteUrl} />
+
+                {/* Open Graph */}
                 <meta property="og:title" content="Dots & Boxes — Online Multiplayer" />
-                <meta
-                    property="og:description"
-                    content="A playful online multiplayer version of the classic Dots & Boxes game."
-                />
+                <meta property="og:description" content="A playful online multiplayer version of the classic Dots & Boxes game." />
                 <meta property="og:type" content="website" />
-                <meta property="og:image" content="/android-chrome-512x512.png" />
-                <meta property="og:image:width" content="512" />
-                <meta property="og:image:height" content="512" />
+                <meta property="og:url" content={siteUrl} />
+                <meta property="og:image" content={ogImage} />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
 
                 {/* Twitter */}
                 <meta name="twitter:card" content="summary_large_image" />
