@@ -76,6 +76,8 @@ docker compose build
 docker compose up -d
 ```
 
+Migrations: The API container automatically runs Prisma migrations on startup (prisma migrate deploy). If no migrations are present, it falls back to prisma db push to sync the schema.
+
 Services start on an internal network only (no published ports). Healthchecks ensure:
 - db is ready via pg_isready
 - api healthy when http://api:3001/api/health returns 200
