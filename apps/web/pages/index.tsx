@@ -104,7 +104,7 @@ function HeroAnimation() {
         </filter>
         <style>
           {`
-            .edge { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; filter: url(#edgeGlow); }
+            .edge { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; }
             .edge-anim { stroke-dasharray: ${dash}; stroke-dashoffset: ${dash}; animation: draw 1.4s ease forwards; }
             @keyframes draw { to { stroke-dashoffset: 0; } }
           `}

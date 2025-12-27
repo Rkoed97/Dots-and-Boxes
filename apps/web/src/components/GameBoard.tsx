@@ -21,7 +21,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
   const canInteract = isMyTurn && !disabled;
 
   const dotRadius = Math.max(3, Math.min(5, Math.round(s * 0.09)));
-  const lineWidth = Math.max(4, Math.min(6, Math.round(s * 0.12)));
+  const lineWidth = Math.max(4, Math.min(6, Math.round(s * 0.18)));
   const hitThickness = 24; // bigger hit areas for touch devices
 
   const [hover, setHover] = useState<Edge | null>(null);
@@ -56,7 +56,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
         const y = dotY(r);
         const x2 = dotX(c + 1);
         return (
-          <line key={`h-${r}-${c}`} x1={x1} y1={y} x2={x2} y2={y} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" filter="url(#edgeGlow)" />
+          <line key={`h-${r}-${c}`} x1={x1} y1={y} x2={x2} y2={y} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
         );
       }))}
 
@@ -67,7 +67,7 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
         const y1 = dotY(r);
         const y2 = dotY(r + 1);
         return (
-          <line key={`v-${r}-${c}`} x1={x} y1={y1} x2={x} y2={y2} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" filter="url(#edgeGlow)" />
+          <line key={`v-${r}-${c}`} x1={x} y1={y1} x2={x} y2={y2} stroke="var(--accent)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
         );
       }))}
 
@@ -76,11 +76,11 @@ export function GameBoard({ snapshot, myUserId, disabled = false, onEdgeClick }:
         hover.o === 'H' ? (
           <line x1={dotX(hover.col)} y1={dotY(hover.row)} x2={dotX(hover.col + 1)} y2={dotY(hover.row)}
                 stroke={`rgba(var(--accent-rgb), 0.5)`} strokeWidth={lineWidth}
-                strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 10" />
+                strokeLinecap="round" strokeLinejoin="round" />
         ) : (
           <line x1={dotX(hover.col)} y1={dotY(hover.row)} x2={dotX(hover.col)} y2={dotY(hover.row + 1)}
                 stroke={`rgba(var(--accent-rgb), 0.5)`} strokeWidth={lineWidth}
-                strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 10" />
+                strokeLinecap="round" strokeLinejoin="round" />
         )
       )}
 
