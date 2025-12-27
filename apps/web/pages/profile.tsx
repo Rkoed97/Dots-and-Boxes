@@ -1,6 +1,7 @@
 import { FormEvent, useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { useAuth, useRequireAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
+import GamesCard from '@/components/profile/GamesCard';
 
 export default function ProfilePage() {
   const { ready, user, refresh } = useRequireAuth();
@@ -48,6 +49,9 @@ export default function ProfilePage() {
             {loading ? 'Saving…' : 'Save'}
           </button>
         </form>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <GamesCard />
       </div>
     </main>
   );
