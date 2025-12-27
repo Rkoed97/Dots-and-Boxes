@@ -1,7 +1,8 @@
-import { Controller, Get, Delete, Param, UseGuards, Inject, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Delete, Param, UseGuards, Inject, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import { Req } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { isLikelyUuid, isValidMatchId } from '../lib/matchId.js';
 
 // Minimal shape for frontend consumption
 interface GameDto {

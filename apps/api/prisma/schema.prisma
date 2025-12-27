@@ -48,6 +48,8 @@ model UserSettings {
 
 model Match {
   id          String       @id @default(uuid())
+  // Public join identifier: 8-char base62
+  matchId     String?      @unique @db.VarChar(8)
   status      MatchStatus  @default(waiting)
   n           Int
   m           Int

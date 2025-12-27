@@ -4,6 +4,7 @@ import type { ClientToServerEvents, ServerToClientEvents, Edge } from '@shared/c
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Inject } from '@nestjs/common';
 import { MatchService } from '../match/match.service.js';
+import { isLikelyUuid, isValidMatchId } from '../lib/matchId.js';
 
 const origin = process.env.CORS_ORIGIN ?? 'http://localhost:3000';
 
