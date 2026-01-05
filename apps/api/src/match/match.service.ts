@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import prismaPkg from '@prisma/client';
-const { MatchStatus, EdgeOrientation } = prismaPkg;
+const { MatchStatus, EdgeOrientation, RematchStatus } = prismaPkg;
 import type { Edge, GameStateSnapshot } from '@shared/core';
 import { createInitialState, validateMove as engineValidateMove, applyMove as engineApplyMove, type MoveRejectionReason } from '@shared/core';
 import { generateMatchId, isLikelyUuid, isValidMatchId } from '../lib/matchId.js';
@@ -175,7 +175,17 @@ export class MatchService {
 
     // Adjust status/winner from DB if finished
     const winnerId = match.winnerId ?? null;
-    const finalState: GameStateSnapshot = { ...state, status: match.status === MatchStatus.finished ? 'finished' : 'active', winnerId };
+    let status: 'pending_acceptance' | 'waiting' | 'active' | 'finished' = 'active';
+    if (match.status === MatchStatus.finished) status = 'finished';
+    else if (match.status === MatchStatus.pending_acceptance) status = 'pending_acceptance';
+
+    const finalState: GameStateSnapshot = {
+      ...state,
+      status,
+      winnerId,
+      rematchStatus: match.rematchStatus as any,
+      nextMatchId: match.nextMatchId
+    };
     this.active.set(internalId, finalState);
     return finalState;
   }
@@ -235,5 +245,110 @@ export class MatchService {
       this.active.set(internalId, next);
       return { ok: true, snapshot: next, gameOver: res.gameOver } as const;
     });
+  }
+
+  async proposeRematch(userId: string, matchId: string) {
+    const match = await this.resolveByIdOrMatchId(matchId);
+    if (!match) throw new Error('MATCH_NOT_FOUND');
+
+    const internalId = match.id;
+    const fullMatch = await this.prisma.match.findUnique({
+      where: { id: internalId },
+      include: { createdBy: true },
+    });
+    if (!fullMatch) throw new Error('MATCH_NOT_FOUND');
+
+    if (fullMatch.status !== MatchStatus.finished) throw new Error('MATCH_NOT_FINISHED');
+    if (fullMatch.createdById !== userId) throw new Error('NOT_CREATOR');
+    if (!fullMatch.playerXId || !fullMatch.playerOId) throw new Error('MISSING_OPPONENT');
+
+    if (fullMatch.rematchStatus === RematchStatus.PROPOSED && fullMatch.nextMatchId) {
+      const nextMatch = await this.prisma.match.findUnique({ where: { id: fullMatch.nextMatchId } });
+      return { newMatchId: nextMatch?.matchId ?? fullMatch.nextMatchId, status: 'PROPOSED', creatorName: fullMatch.createdBy.username };
+    }
+
+    if (fullMatch.rematchStatus === RematchStatus.ACCEPTED) {
+      const nextMatch = await this.prisma.match.findUnique({ where: { id: fullMatch.nextMatchId! } });
+      return { newMatchId: nextMatch?.matchId ?? fullMatch.nextMatchId, status: 'ACCEPTED' };
+    }
+
+    // Create new match
+    const newMatchPublicId = await this.generateUniqueMatchId();
+    const newMatch = await this.prisma.match.create({
+      data: {
+        matchId: newMatchPublicId,
+        status: MatchStatus.pending_acceptance,
+        n: fullMatch.n,
+        m: fullMatch.m,
+        createdById: fullMatch.createdById,
+        playerXId: fullMatch.playerXId,
+        playerOId: fullMatch.playerOId,
+      },
+    });
+
+    await this.prisma.match.update({
+      where: { id: internalId },
+      data: {
+        nextMatchId: newMatch.id,
+        rematchStatus: RematchStatus.PROPOSED,
+        rematchProposedAt: new Date(),
+      },
+    });
+
+    this.active.delete(internalId);
+
+    return { newMatchId: newMatchPublicId, status: 'PROPOSED', creatorName: fullMatch.createdBy.username };
+  }
+
+  async respondToRematch(userId: string, matchId: string, decision: 'ACCEPT' | 'REJECT') {
+    const match = await this.resolveByIdOrMatchId(matchId);
+    if (!match) throw new Error('MATCH_NOT_FOUND');
+
+    const internalId = match.id;
+    const fullMatch = await this.prisma.match.findUnique({
+      where: { id: internalId },
+    });
+    if (!fullMatch) throw new Error('MATCH_NOT_FOUND');
+
+    if (fullMatch.status !== MatchStatus.finished) throw new Error('MATCH_NOT_FINISHED');
+    if (fullMatch.createdById === userId) throw new Error('CREATOR_CANNOT_RESPOND');
+    if (userId !== fullMatch.playerXId && userId !== fullMatch.playerOId) throw new Error('NOT_IN_MATCH');
+    if (fullMatch.rematchStatus !== RematchStatus.PROPOSED || !fullMatch.nextMatchId) throw new Error('NO_PROPOSAL');
+
+    if (decision === 'ACCEPT') {
+      await this.prisma.match.update({
+        where: { id: internalId },
+        data: {
+          rematchStatus: RematchStatus.ACCEPTED,
+          rematchRespondedAt: new Date(),
+        },
+      });
+
+      const nextMatch = await this.prisma.match.update({
+        where: { id: fullMatch.nextMatchId },
+        data: {
+          status: MatchStatus.active,
+        },
+      });
+
+      this.active.delete(internalId);
+
+      return { finishedMatchId: match.matchId ?? internalId, newMatchId: nextMatch.matchId ?? nextMatch.id, status: 'ACCEPTED' };
+    } else {
+      await this.prisma.match.update({
+        where: { id: internalId },
+        data: {
+          rematchStatus: RematchStatus.REJECTED,
+          rematchRespondedAt: new Date(),
+        },
+      });
+
+      // Optionally delete the pending match
+      await this.prisma.match.delete({ where: { id: fullMatch.nextMatchId } });
+
+      this.active.delete(internalId);
+
+      return { finishedMatchId: match.matchId ?? internalId, status: 'REJECTED' };
+    }
   }
 }

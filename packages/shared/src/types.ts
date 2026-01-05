@@ -31,6 +31,8 @@ export interface GameStateSnapshot {
   edges: GameEdges;
   boxes: BoxOwner[][];
   scores: { x: number; o: number };
-  status: "waiting" | "active" | "finished";
+  status: "pending_acceptance" | "waiting" | "active" | "finished";
   winnerId?: string | null;
+  rematchStatus?: 'NONE' | 'PROPOSED' | 'ACCEPTED' | 'REJECTED';
+  nextMatchId?: string | null;
 }

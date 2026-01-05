@@ -11,10 +11,18 @@ generator client {
 }
 
 enum MatchStatus {
+  pending_acceptance
   waiting
   active
   finished
   abandoned
+}
+
+enum RematchStatus {
+  NONE
+  PROPOSED
+  ACCEPTED
+  REJECTED
 }
 
 enum EdgeOrientation {
@@ -23,53 +31,62 @@ enum EdgeOrientation {
 }
 
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  username     String         @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String   @unique
   passwordHash String
-  createdAt    DateTime       @default(now())
+  createdAt    DateTime @default(now())
 
   // Relations
   settings       UserSettings?
   sessions       Session[]
-  matchesCreated Match[]      @relation("MatchesCreated")
-  matchesX       Match[]      @relation("PlayerXMatches")
-  matchesO       Match[]      @relation("PlayerOMatches")
-  matchesWon     Match[]      @relation("MatchesWon")
+  matchesCreated Match[]       @relation("MatchesCreated")
+  matchesX       Match[]       @relation("PlayerXMatches")
+  matchesO       Match[]       @relation("PlayerOMatches")
+  matchesWon     Match[]       @relation("MatchesWon")
   moves          MatchMove[]
 }
 
 model UserSettings {
-  userId String  @id
+  userId String @id
   theme  Json
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Match {
-  id          String       @id @default(uuid())
+  id         String      @id @default(uuid())
   // Public join identifier: 8-char base62
-  matchId     String?      @unique @db.VarChar(8)
-  status      MatchStatus  @default(waiting)
-  n           Int
-  m           Int
-  createdAt   DateTime     @default(now())
-  finishedAt  DateTime?
+  matchId    String?     @unique @db.VarChar(8)
+  status     MatchStatus @default(waiting)
+  n          Int
+  m          Int
+  createdAt  DateTime    @default(now())
+  finishedAt DateTime?
+
+  // Rematch fields
+  nextMatchId        String?       @unique
+  rematchStatus      RematchStatus @default(NONE)
+  rematchProposedAt  DateTime?
+  rematchRespondedAt DateTime?
+
+  nextMatch      Match? @relation("RematchRelation", fields: [nextMatchId], references: [id])
+  rematchOfMatch Match? @relation("RematchRelation")
 
   // Relations
-  createdBy   User         @relation("MatchesCreated", fields: [createdById], references: [id])
+  createdBy   User   @relation("MatchesCreated", fields: [createdById], references: [id])
   createdById String
 
-  playerX     User?        @relation("PlayerXMatches", fields: [playerXId], references: [id])
-  playerXId   String?
+  playerX   User?   @relation("PlayerXMatches", fields: [playerXId], references: [id])
+  playerXId String?
 
-  playerO     User?        @relation("PlayerOMatches", fields: [playerOId], references: [id])
-  playerOId   String?
+  playerO   User?   @relation("PlayerOMatches", fields: [playerOId], references: [id])
+  playerOId String?
 
-  winner      User?        @relation("MatchesWon", fields: [winnerId], references: [id])
-  winnerId    String?
+  winner   User?   @relation("MatchesWon", fields: [winnerId], references: [id])
+  winnerId String?
 
-  moves       MatchMove[]
+  moves MatchMove[]
 
   @@index([status])
   @@index([createdById])
@@ -79,15 +96,15 @@ model Match {
 }
 
 model MatchMove {
-  id               String          @id @default(uuid())
-  match            Match           @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId          String
-  player           User            @relation(fields: [playerId], references: [id])
-  playerId         String
-  edgeOrientation  EdgeOrientation
-  edgeRow          Int
-  edgeCol          Int
-  createdAt        DateTime        @default(now())
+  id              String          @id @default(uuid())
+  match           Match           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId         String
+  player          User            @relation(fields: [playerId], references: [id])
+  playerId        String
+  edgeOrientation EdgeOrientation
+  edgeRow         Int
+  edgeCol         Int
+  createdAt       DateTime        @default(now())
 
   @@index([matchId, createdAt])
   @@index([playerId])

@@ -121,4 +121,48 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('game:rematchPropose')
+  async handleRematchPropose(@MessageBody() payload: { matchId: string }, @ConnectedSocket() client: Socket) {
+    const userId = (client.data as any).userId as string;
+    if (!userId) return;
+    const { matchId } = payload || {};
+    if (!matchId) return;
+
+    try {
+      const result = await this.matches.proposeRematch(userId, matchId);
+      this.server.to(this.room(matchId)).emit('game:rematchProposed', {
+        finishedMatchId: matchId,
+        newMatchId: result.newMatchId,
+        creatorId: userId,
+        creatorName: result.creatorName,
+      });
+    } catch (e: any) {
+      // Log or handle error
+    }
+  }
+
+  @SubscribeMessage('game:rematchRespond')
+  async handleRematchRespond(@MessageBody() payload: { matchId: string; decision: 'ACCEPT' | 'REJECT' }, @ConnectedSocket() client: Socket) {
+    const userId = (client.data as any).userId as string;
+    if (!userId) return;
+    const { matchId, decision } = payload || {};
+    if (!matchId || !decision) return;
+
+    try {
+      const result = await this.matches.respondToRematch(userId, matchId, decision);
+      if (result.status === 'ACCEPTED') {
+        this.server.to(this.room(matchId)).emit('game:rematchAccepted', {
+          finishedMatchId: result.finishedMatchId,
+          newMatchId: result.newMatchId,
+        });
+      } else {
+        this.server.to(this.room(matchId)).emit('game:rematchRejected', {
+          finishedMatchId: result.finishedMatchId,
+        });
+      }
+    } catch (e: any) {
+      // Log or handle error
+    }
+  }
+
 }

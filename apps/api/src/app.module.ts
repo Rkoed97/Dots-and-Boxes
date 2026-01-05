@@ -10,5 +10,6 @@ import { MatchModule } from './match/match.module.js';
 @Module({
   imports: [HealthModule, PrismaModule, DbCheckModule, AuthModule, UsersModule, MatchModule],
   providers: [RealtimeGateway],
+  exports: [RealtimeGateway],
 })
 export class AppModule {}
